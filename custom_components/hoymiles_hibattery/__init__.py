@@ -25,7 +25,7 @@ from homeassistant.exceptions import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CARD_FILE, DOMAIN, URL_BASE, VERSION, WEEK_DAYS
+from .const import CARD_FILE, CARDS_FILE, DOMAIN, URL_BASE, VERSION, WEEK_DAYS
 from .hub import HiBatteryHub, get_hub
 from .plans import PlanError
 
@@ -166,7 +166,8 @@ async def _register_frontend(hass: HomeAssistant) -> None:
     try:
         from homeassistant.components.frontend import add_extra_js_url
 
-        add_extra_js_url(hass, f"{URL_BASE}/{CARD_FILE}?v={VERSION}")
+        for file in (CARD_FILE, CARDS_FILE):
+            add_extra_js_url(hass, f"{URL_BASE}/{file}?v={VERSION}")
     except ImportError:
         _LOGGER.warning("Frontend indisponible : la carte n'a pas pu être chargée")
     hass.data[f"{DOMAIN}_frontend"] = True

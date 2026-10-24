@@ -11,7 +11,7 @@
  *     grid_power: sensor.xxx   # optionnel : puissance réseau (+ achat), sinon celle du compteur de la batterie
  */
 const DOMAIN = "hoymiles_hibattery";
-const CARD_VERSION = "1.0.3";
+const CARD_VERSION = "1.0.4";
 
 const MODES = {
   1: { name: "Charge forcée", short: "Charge forcée", color: "#ff9800", icon: "mdi:battery-charging-high" },
@@ -499,7 +499,7 @@ class HoymilesDashboardStrategy extends HTMLElement {
     });
     const modeTile = (name) => tile(e("mode"), name, { features_position: "bottom", features: [{ type: "select-options" }] });
 
-    // flux d'énergie : power-flow-card-plus si installée (HACS), sinon des tuiles
+    // flux d'énergie : power-flow-card-plus si installée (HACS), sinon la carte de flux de l'intégration
     const flow = (await HoymilesDashboardStrategy._hasCard(hass, "power-flow-card-plus"))
       ? {
           type: "custom:power-flow-card-plus",
@@ -515,15 +515,7 @@ class HoymilesDashboardStrategy extends HTMLElement {
               ...(e("home_today") && { secondary_info: { entity: e("home_today"), unit_of_measurement: "kWh" } }) },
           },
         }
-      : {
-          type: "grid", columns: 2, square: false,
-          cards: only([
-            tile(e("pv_total_p"), "Solaire", { color: "amber" }),
-            tile(e("bat_p"), "Batterie"),
-            tile(grid, "Réseau", { color: "blue", icon: "mdi:transmission-tower" }),
-            tile(e("sys_load_p"), "Maison", { icon: "mdi:home-lightning-bolt" }),
-          ]),
-        };
+      : { type: "custom:hoymiles-flow-card", entity: planning.entity_id, ...(config.grid_power && { grid_power: config.grid_power }) };
 
     const vueBatterie = {
       title: "Batterie", path: "batterie", icon: "mdi:home-battery",

@@ -48,6 +48,22 @@ strategy:
 
 « Prendre le contrôle » (menu ⋮ du tableau de bord) le transforme en tableau de bord classique modifiable.
 
+## Cartes
+
+Fournies par l'intégration (rien à installer), visibles dans « Ajouter une carte ». Les entités sont trouvées
+automatiquement : aucune option n'est nécessaire.
+
+| Carte | Contenu |
+|---|---|
+| `custom:hoymiles-battery-card` | SOC, charge / décharge, énergie disponible, température, mode, créneau en cours, alertes |
+| `custom:hoymiles-flow-card` | flux d'énergie animé : solaire, réseau (achat / injection), batterie, maison |
+| `custom:hoymiles-daily-card` | bilan du jour : production, consommation, achat, injection, batterie, autoconsommation et autonomie |
+| `custom:hoymiles-settings-card` | pilotage : mode (Planning / Manuel / Auto), planning actif, renvoi / lecture, réglages du mode Manuel |
+| `custom:hoymiles-tou-card` | édition complète des plannings (créneaux) |
+
+Options facultatives : `title`, `entity` (capteur Planning TOU, si plusieurs batteries), `grid_power` (autre capteur de
+puissance réseau, + = achat).
+
 ## Carte des plannings
 
 ```yaml

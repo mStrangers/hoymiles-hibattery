@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 DOMAIN = "hoymiles_hibattery"
-VERSION = "1.0.3"
+VERSION = "1.0.4"
 
 CONF_DEVICE_ID = "device_id"
 CONF_PREFIX = "topic_prefix"
@@ -53,3 +53,4 @@ SIGNAL_UPDATE = f"{DOMAIN}_update_{{}}"
 
 URL_BASE = f"/{DOMAIN}_static"
 CARD_FILE = "hoymiles-tou-card.js"
+CARDS_FILE = "hoymiles-cards.js"
