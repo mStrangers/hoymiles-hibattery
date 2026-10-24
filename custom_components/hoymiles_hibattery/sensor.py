@@ -78,6 +78,11 @@ SENSORS: tuple[HiSensorDescription, ...] = (
         key="pv_total_p", name="Puissance PV totale", icon="mdi:solar-power-variant",
         value_fn=lambda h: None if h.pv_total_power is None else round(h.pv_total_power, 1), **W,
     ),
+    # compteur réseau vu par la batterie (Shelly Pro 3EM, firmware >= 1.3.3)
+    HiSensorDescription(key="sys_grid_p", name="Puissance réseau compteur",
+                        icon="mdi:transmission-tower", value_fn=lambda h: h.q("sys_grid_p"), **W),
+    HiSensorDescription(key="sys_load_p", name="Puissance consommation maison",
+                        icon="mdi:home-lightning-bolt", value_fn=lambda h: h.q("sys_load_p"), **W),
     HiSensorDescription(
         key="bat_sts", name="Statut batterie", icon="mdi:battery-sync",
         value_fn=lambda h: h.quick.get("bat_sts"),
@@ -99,6 +104,10 @@ SENSORS: tuple[HiSensorDescription, ...] = (
                         value_fn=lambda h: _num(h.system.get("plug_out_e")), **WH),
     HiSensorDescription(key="plug_in_e", name="Energie prise entree",
                         value_fn=lambda h: _num(h.system.get("plug_in_e")), **WH),
+    HiSensorDescription(key="eps_out_e", name="Energie EPS sortie", icon="mdi:power-socket-eu",
+                        value_fn=lambda h: _num(h.system.get("eps_out_e")), **WH),
+    HiSensorDescription(key="eps_in_e", name="Energie EPS entree", icon="mdi:solar-power",
+                        value_fn=lambda h: _num(h.system.get("eps_in_e")), **WH),
     # --- appareil
     HiSensorDescription(
         key="bat_temp", name="Température batterie",
@@ -124,6 +133,15 @@ SENSORS: tuple[HiSensorDescription, ...] = (
         device_class=SensorDeviceClass.FREQUENCY, state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda h: _grid(h, "grid_on", "f"),
     ),
+    # --- compteurs totaux (device/state, firmware >= 1.3.3)
+    HiSensorDescription(key="plug_in_total", name="Energie prise entree totale",
+                        value_fn=lambda h: _grid(h, "grid_on", "etin"), **WH),
+    HiSensorDescription(key="plug_out_total", name="Energie prise sortie totale",
+                        value_fn=lambda h: _grid(h, "grid_on", "etout"), **WH),
+    HiSensorDescription(key="eps_in_total", name="Energie EPS entree totale", icon="mdi:solar-power",
+                        value_fn=lambda h: _grid(h, "grid_off", "etin"), **WH),
+    HiSensorDescription(key="eps_out_total", name="Energie EPS sortie totale", icon="mdi:power-socket-eu",
+                        value_fn=lambda h: _grid(h, "grid_off", "etout"), **WH),
     # --- pilotage
     HiSensorDescription(
         key="setpoint", name="Consigne envoyée", icon="mdi:target", **W,

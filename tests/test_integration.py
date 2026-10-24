@@ -379,3 +379,50 @@ async def test_options_can_clear_meter(hass: HomeAssistant, setup):
         await hass.async_block_till_done(wait_background_tasks=True)
     assert result["type"] == "create_entry"
     assert "grid_import_entity" not in entry.options
+
+
+# messages réels capturés sur la batterie (firmware 1.3.3)
+QUICK_133 = {
+    "grid_on_p": 766.5, "grid_off_p": -584.9, "pv_p": 0, "bat_sts": "discharge", "bat_p": 181.6, "soc": 76.5,
+    "heat": False, "sys_pv_p": 0, "sys_plug_p": 766.5, "sys_bat_p": 181.6, "sys_grid_p": 459.1,
+    "sys_load_p": 1225.6, "sys_sp_p": 0, "sys_soc": 76.5, "sys_heat": False, "sys_pv2_p": 0, "sys_eps_p": -584.9,
+}
+SYSTEM_133 = {
+    "pv_p": 0, "pv2_p": 0, "plug_p": 715.1, "bat_p": 87.4, "grid_p": 263, "load_p": 978.1, "sp_p": 0,
+    "eps_p": -627.7, "soc": 76.7, "pv_e": 0, "pv2_e": 0, "dchg_e": 1209, "chg_e": 2281, "plug_out_e": 1507,
+    "plug_in_e": 2573, "eps_out_e": 0, "eps_in_e": 556, "ems_mode": "tou_plan",
+}
+DEVICE_133 = {
+    "grid": [
+        {"type": "grid_on", "v": 233.1, "i": 3.58, "f": 50.01, "p": 715.1, "q": 145.9,
+         "ein": 2573, "eout": 1509, "etin": 70049, "etout": 84465},
+        {"type": "grid_off", "v": 235.3, "i": 3.18, "f": 50.01, "p": -627.7, "q": -36.9,
+         "ein": 557, "eout": 0, "etin": 40985, "etout": 0},
+        {"type": "inv", "v": 233.7, "i": 0.72, "p": 87.4, "q": 108.9,
+         "ein": 2579, "eout": 966, "etin": 80876, "etout": 54519},
+    ],
+    "bat_sts": "discharge", "bat_v": 13.2, "bat_i": -8.28, "bat_p": 87.4, "bat_temp": 20.5, "soc": 76.7,
+    "rssi": -46, "pv_num": 4, "pvs": [{"id": i, "p": 0} for i in range(1, 5)], "pack_num": 1,
+    "packs": [{"id": 1, "soc": 76.6, "temp": 20.5, "heat": False}],
+}
+
+
+async def test_firmware_133_fields(hass: HomeAssistant, setup):
+    async_fire_mqtt_message(hass, f"{BASE}/quick/state", json.dumps(QUICK_133))
+    async_fire_mqtt_message(hass, f"{BASE}/system/state", json.dumps(SYSTEM_133))
+    async_fire_mqtt_message(hass, f"{BASE}/device/state", json.dumps(DEVICE_133))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    expected = {
+        "puissance_reseau_compteur": "459.1",
+        "puissance_consommation_maison": "1225.6",
+        "puissance_pv_totale": "584.9",
+        "energie_eps_entree": "556.0",
+        "energie_eps_sortie": "0.0",
+        "energie_prise_entree_totale": "70049.0",
+        "energie_prise_sortie_totale": "84465.0",
+        "energie_eps_entree_totale": "40985.0",
+        "energie_eps_sortie_totale": "0.0",
+        "tension_reseau": "233.1",
+    }
+    for key, value in expected.items():
+        assert hass.states.get(f"sensor.msa_280526231099_{key}").state == value, key

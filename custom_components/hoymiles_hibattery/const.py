@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 DOMAIN = "hoymiles_hibattery"
-VERSION = "1.0.1"
+VERSION = "1.0.2"
 
 CONF_DEVICE_ID = "device_id"
 CONF_PREFIX = "topic_prefix"

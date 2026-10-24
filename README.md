@@ -1,7 +1,7 @@
 # Hoymiles HiBattery (MQTT local) pour Home Assistant
 
 Intégration personnalisée pour piloter une batterie **Hoymiles HiBattery / MS-A2**
-(testée sur HiBattery 4020 X, firmware 1.2.4) **en local via MQTT**, sans le cloud :
+(testée sur HiBattery 4020 X, firmwares 1.2.4 et 1.3.3) **en local via MQTT**, sans le cloud :
 
 - capteurs de la batterie (SOC, puissances, PV, port EPS, températures, énergies…) ;
 - compteurs du jour (production PV, charge, décharge, achat/injection réseau, consommation maison) ;
@@ -77,6 +77,9 @@ En mode Planning, l'intégration compare le comportement réel de la batterie au
 | `select.msa_…_planning_tou_choisi` | planning actif |
 | `sensor.msa_…_planning_tou` | créneau en cours (attributs : tous les plannings) |
 | `binary_sensor.msa_…_planning_tou_non_respecte` | écart > 3 min avec le planning local |
+| `sensor.msa_…_puissance_reseau_compteur`, `…_puissance_consommation_maison` | réseau (+ achat) et maison vus par le compteur de la batterie (Shelly Pro 3EM, firmware ≥ 1.3.3) |
+| `sensor.msa_…_energie_eps_entree`, `…_energie_eps_sortie` | énergie du jour de la prise EPS (ex. micro-onduleur PV branché dessus) |
+| `sensor.msa_…_energie_prise_entree_totale`, `…_sortie_totale`, `…_energie_eps_entree_totale`, `…_sortie_totale` | compteurs totaux (pour le tableau Énergie, firmware ≥ 1.3.3) |
 | `number.msa_…_consigne_de_decharge`, `…_decharge_max`, `…_soc_mini` | mode Manuel (consigne renvoyée toutes les 10 s, 0 W sous le SOC mini) |
 | `button.msa_…_envoyer_le_planning`, `…_lire_le_planning`, `…_redemarrer` | actions |
 

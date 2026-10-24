@@ -6,7 +6,7 @@
  *   entity: sensor.msa_280526231099_planning_tou
  */
 const DOMAIN = "hoymiles_hibattery";
-const CARD_VERSION = "1.0.1";
+const CARD_VERSION = "1.0.2";
 
 const MODES = {
   1: { name: "Charge forcée", short: "Charge forcée", color: "#ff9800", icon: "mdi:battery-charging-high" },
