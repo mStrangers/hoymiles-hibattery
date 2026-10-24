@@ -1,0 +1,19 @@
+{
+  "domain": "hoymiles_hibattery",
+  "name": "Hoymiles HiBattery (MQTT local)",
+  "after_dependencies": [
+    "frontend"
+  ],
+  "codeowners": [],
+  "config_flow": true,
+  "dependencies": [
+    "mqtt",
+    "http"
+  ],
+  "documentation": "https://github.com/mStrangers/hoymiles-hibattery",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/mStrangers/hoymiles-hibattery/issues",
+  "requirements": [],
+  "version": "1.0.1"
+}

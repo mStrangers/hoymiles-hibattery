@@ -1,0 +1,98 @@
+# Carte de réglages - HiBattery (intégration hoymiles_hibattery)
+type: vertical-stack
+cards:
+  - type: heading
+    heading: Batterie HiBattery
+    icon: mdi:home-battery
+    badges:
+      - type: entity
+        entity: sensor.msa_280526231099_mode_ems_actuel
+        show_state: true
+        show_icon: true
+      - type: entity
+        entity: binary_sensor.msa_280526231099_chauffage_batterie
+        show_state: true
+        show_icon: true
+
+  - type: tile
+    entity: select.msa_280526231099_mode_batterie
+    name: Mode de pilotage
+    features_position: bottom
+    features:
+      - type: select-options
+
+  - type: grid
+    columns: 2
+    square: false
+    cards:
+      - type: tile
+        entity: sensor.msa_280526231099_soc
+        name: SOC
+        color: green
+      - type: tile
+        entity: sensor.msa_280526231099_statut_batterie
+        name: Statut
+      - type: tile
+        entity: sensor.shellyemg3_d885ac0af280_energy_meter_0_puissance
+        name: Réseau
+        icon: mdi:transmission-tower
+        color: blue
+      - type: tile
+        entity: sensor.msa_280526231099_puissance_batterie
+        name: Puissance batterie
+      - type: tile
+        entity: sensor.msa_280526231099_puissance_pv_totale
+        name: Puissance PV totale
+        color: amber
+      - type: tile
+        entity: sensor.msa_280526231099_energie_disponible
+        name: Énergie disponible
+        color: green
+
+  # --- Mode Manuel
+  - type: conditional
+    conditions:
+      - condition: state
+        entity: select.msa_280526231099_mode_batterie
+        state: Manuel
+    card:
+      type: vertical-stack
+      cards:
+        - type: tile
+          entity: number.msa_280526231099_consigne_de_decharge
+          name: Consigne de décharge
+          features_position: bottom
+          features:
+            - type: numeric-input
+              style: slider
+        - type: entities
+          title: Limites
+          entities:
+            - entity: number.msa_280526231099_soc_mini
+              name: SOC mini (décharge)
+            - entity: number.msa_280526231099_decharge_max
+              name: Décharge max
+            - entity: sensor.msa_280526231099_consigne_envoyee
+              name: Consigne envoyée
+
+  # --- Mode Planning : éditeur de plannings
+  - type: conditional
+    conditions:
+      - condition: state
+        entity: select.msa_280526231099_mode_batterie
+        state: Planning
+    card:
+      type: custom:hoymiles-tou-card
+      entity: sensor.msa_280526231099_planning_tou
+      title: Plannings batterie
+
+  - type: history-graph
+    title: Batterie (2 h)
+    hours_to_show: 2
+    entities:
+      - entity: sensor.shellyemg3_d885ac0af280_energy_meter_0_puissance
+        name: Réseau
+      - entity: sensor.msa_280526231099_puissance_batterie
+        name: Batterie
+      - entity: sensor.msa_280526231099_puissance_pv_totale
+        name: PV totale

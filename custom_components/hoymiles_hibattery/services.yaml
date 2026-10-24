@@ -1,0 +1,66 @@
+save_plan:
+  fields:
+    entry_id:
+      selector:
+        config_entry:
+          integration: hoymiles_hibattery
+    name:
+      required: true
+      selector:
+        text:
+    old_name:
+      selector:
+        text:
+    slots:
+      required: true
+      example: '[{"mode": 4, "debut": "00:00", "fin": "24:00", "sh": 100, "sl": 10, "pc": 800, "pd": 200}]'
+      selector:
+        object:
+    select:
+      default: false
+      selector:
+        boolean:
+delete_plan:
+  fields:
+    entry_id:
+      selector:
+        config_entry:
+          integration: hoymiles_hibattery
+    name:
+      required: true
+      selector:
+        text:
+select_plan:
+  fields:
+    entry_id:
+      selector:
+        config_entry:
+          integration: hoymiles_hibattery
+    name:
+      required: true
+      selector:
+        text:
+send_plan:
+  fields:
+    entry_id:
+      selector:
+        config_entry:
+          integration: hoymiles_hibattery
+    name:
+      selector:
+        text:
+read_plan:
+  fields:
+    entry_id:
+      selector:
+        config_entry:
+          integration: hoymiles_hibattery
+    day:
+      default: Mon
+      selector:
+        select:
+          options: [Mon, Tue, Wed, Thu, Fri, Sat, Sun]
+    notify:
+      default: true
+      selector:
+        boolean:

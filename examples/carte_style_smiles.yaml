@@ -1,0 +1,123 @@
+# Carte "style S-Miles Home" - HiBattery (intégration hoymiles_hibattery)
+# Prérequis (HACS > Interface) : Power Flow Card Plus
+type: vertical-stack
+cards:
+  - type: heading
+    heading: HiBattery 4020 X
+    heading_style: title
+    icon: mdi:home-battery
+    badges:
+      - type: entity
+        entity: sensor.msa_280526231099_statut_batterie
+        show_state: true
+        show_icon: true
+      - type: entity
+        entity: sensor.msa_280526231099_mode_ems_actuel
+        show_state: true
+        show_icon: true
+
+  # --- Flux d'énergie (réseau + = achat ; batterie + = décharge)
+  - type: custom:power-flow-card-plus
+    w_decimals: 0
+    kw_decimals: 2
+    watt_threshold: 1000
+    clickable_entities: true
+    entities:
+      solar:
+        entity: sensor.msa_280526231099_puissance_pv_totale
+        name: Solaire
+        icon: mdi:solar-power-variant
+        color_icon: true
+        secondary_info:
+          entity: sensor.msa_280526231099_production_pv_jour
+          unit_of_measurement: kWh
+      battery:
+        entity: sensor.msa_280526231099_puissance_batterie
+        state_of_charge: sensor.msa_280526231099_soc
+        name: Batterie
+        color_icon: true
+        color_state_of_charge_value: true
+      grid:
+        entity: sensor.shellyemg3_d885ac0af280_energy_meter_0_puissance
+        name: Réseau
+        color_icon: true
+        secondary_info:
+          entity: sensor.msa_280526231099_reseau_achat_jour
+          unit_of_measurement: kWh
+      home:
+        name: Maison
+        color_icon: solar
+        secondary_info:
+          entity: sensor.msa_280526231099_consommation_maison_jour
+          unit_of_measurement: kWh
+
+  # --- Batterie
+  - type: grid
+    columns: 2
+    square: false
+    cards:
+      - type: gauge
+        entity: sensor.msa_280526231099_soc
+        name: Charge batterie
+        min: 0
+        max: 100
+        severity:
+          red: 0
+          yellow: 15
+          green: 40
+      - type: vertical-stack
+        cards:
+          - type: tile
+            entity: sensor.msa_280526231099_temperature_batterie
+            name: Température
+            color: orange
+          - type: tile
+            entity: sensor.msa_280526231099_energie_disponible
+            name: Énergie disponible
+            color: green
+          - type: tile
+            entity: sensor.msa_280526231099_rssi_wifi
+            name: Wi-Fi
+
+  # --- Bilan du jour
+  - type: glance
+    title: Aujourd'hui - batterie
+    columns: 4
+    entities:
+      - entity: sensor.msa_280526231099_production_pv_jour
+        name: Production PV
+      - entity: sensor.msa_280526231099_batterie_charge_jour
+        name: Chargé
+      - entity: sensor.msa_280526231099_batterie_decharge_jour
+        name: Déchargé
+      - entity: sensor.msa_280526231099_batterie_sortie_jour
+        name: Fourni maison
+  - type: glance
+    title: Aujourd'hui - maison et réseau
+    columns: 3
+    entities:
+      - entity: sensor.msa_280526231099_consommation_maison_jour
+        name: Consommation
+      - entity: sensor.msa_280526231099_reseau_achat_jour
+        name: Achat réseau
+      - entity: sensor.msa_280526231099_reseau_injection_jour
+        name: Injection
+
+  # --- Mode
+  - type: tile
+    entity: select.msa_280526231099_mode_batterie
+    name: Mode de fonctionnement
+    features_position: bottom
+    features:
+      - type: select-options
+
+  - type: history-graph
+    title: Aujourd'hui
+    hours_to_show: 24
+    entities:
+      - entity: sensor.msa_280526231099_puissance_pv_totale
+        name: Solaire
+      - entity: sensor.msa_280526231099_puissance_batterie
+        name: Batterie
+      - entity: sensor.shellyemg3_d885ac0af280_energy_meter_0_puissance
+        name: Réseau

@@ -1,0 +1,124 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Hoymiles HiBattery battery (local MQTT)",
+        "description": "La batterie doit publier sur le broker MQTT utilisé par Home Assistant (topics homeassistant/.../MSA-...).",
+        "data": {
+          "device_id": "Identifiant de la batterie (ex. MSA-280526231099)",
+          "topic_prefix": "Préfixe des topics MQTT",
+          "model": "Modèle",
+          "capacity_kwh": "Capacité par pack (kWh)",
+          "grid_import_entity": "Compteur d'énergie achetée au réseau (optionnel)",
+          "grid_export_entity": "Compteur d'énergie injectée (optionnel)"
+        }
+      }
+    },
+    "error": {
+      "invalid_device": "Identifiant invalide"
+    },
+    "abort": {
+      "already_configured": "Cette batterie est déjà configurée"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options de la batterie",
+        "data": {
+          "capacity_kwh": "Capacité par pack (kWh)",
+          "grid_import_entity": "Compteur d'énergie achetée au réseau",
+          "grid_export_entity": "Compteur d'énergie injectée"
+        }
+      }
+    }
+  },
+  "services": {
+    "save_plan": {
+      "name": "Enregistrer un planning",
+      "description": "Crée ou modifie un planning TOU.",
+      "fields": {
+        "entry_id": {
+          "name": "Batterie",
+          "description": "Optionnel s'il n'y a qu'une batterie."
+        },
+        "name": {
+          "name": "Nom",
+          "description": "Nom du planning."
+        },
+        "old_name": {
+          "name": "Ancien nom",
+          "description": "Pour renommer un planning existant."
+        },
+        "slots": {
+          "name": "Créneaux",
+          "description": "Liste de créneaux (mode 1/2/4, debut, fin, sh, sl, pc, pd)."
+        },
+        "select": {
+          "name": "Activer",
+          "description": "Choisir ce planning après l'enregistrement."
+        }
+      }
+    },
+    "delete_plan": {
+      "name": "Supprimer un planning",
+      "description": "Supprime un planning TOU.",
+      "fields": {
+        "entry_id": {
+          "name": "Batterie",
+          "description": "Optionnel s'il n'y a qu'une batterie."
+        },
+        "name": {
+          "name": "Nom",
+          "description": "Nom du planning."
+        }
+      }
+    },
+    "select_plan": {
+      "name": "Choisir un planning",
+      "description": "Active un planning (envoyé à la batterie en mode Planning).",
+      "fields": {
+        "entry_id": {
+          "name": "Batterie",
+          "description": "Optionnel s'il n'y a qu'une batterie."
+        },
+        "name": {
+          "name": "Nom",
+          "description": "Nom du planning."
+        }
+      }
+    },
+    "send_plan": {
+      "name": "Envoyer le planning",
+      "description": "Envoie un planning à la batterie (par défaut le planning choisi). En mode Planning, un autre planning devient le planning choisi.",
+      "fields": {
+        "entry_id": {
+          "name": "Batterie",
+          "description": "Optionnel s'il n'y a qu'une batterie."
+        },
+        "name": {
+          "name": "Nom",
+          "description": "Planning à envoyer (optionnel)."
+        }
+      }
+    },
+    "read_plan": {
+      "name": "Lire le planning",
+      "description": "Lit le planning stocké dans la batterie.",
+      "fields": {
+        "entry_id": {
+          "name": "Batterie",
+          "description": "Optionnel s'il n'y a qu'une batterie."
+        },
+        "day": {
+          "name": "Jour",
+          "description": "Jour à lire."
+        },
+        "notify": {
+          "name": "Notification",
+          "description": "Afficher le résultat dans une notification."
+        }
+      }
+    }
+  }
+}
