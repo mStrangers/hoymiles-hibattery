@@ -26,8 +26,27 @@ Intégration personnalisée pour piloter une batterie **Hoymiles HiBattery / MS-
    - Compteurs d'énergie achetée / injectée (optionnel, ex. Shelly) : pour les compteurs réseau et la consommation de la maison.
 4. La capacité et les compteurs se modifient ensuite dans **Configurer** (un compteur peut être retiré en vidant le champ).
 
-La carte d'édition des plannings est chargée automatiquement (pas de ressource à ajouter).
+La carte d'édition des plannings et le tableau de bord sont chargés automatiquement (pas de ressource à ajouter).
 Après une mise à jour, faites **Ctrl+F5** dans le navigateur.
+
+## Tableau de bord prêt à l'emploi
+
+Paramètres → Tableaux de bord → **Ajouter un tableau de bord** → **Batterie Hoymiles**. Il contient deux vues :
+
+- **Batterie** : flux d'énergie (avec [Power Flow Card Plus](https://github.com/flixlix/power-flow-card-plus) si elle est
+  installée via HACS, sinon des tuiles), SOC, température, compteurs du jour, mode, historique 24 h ;
+- **Réglages** : mode de pilotage, mesures, réglages du mode Manuel ou éditeur de plannings selon le mode, historique 2 h.
+
+Les entités sont trouvées automatiquement (même renommées). La puissance réseau est celle du compteur vu par la
+batterie ; pour en utiliser une autre, dans l'éditeur de configuration brute :
+
+```yaml
+strategy:
+  type: custom:hoymiles-hibattery
+  grid_power: sensor.mon_compteur_puissance   # + = achat
+```
+
+« Prendre le contrôle » (menu ⋮ du tableau de bord) le transforme en tableau de bord classique modifiable.
 
 ## Carte des plannings
 

@@ -122,6 +122,9 @@ class HiBatteryHub:
         self._last_pv_power: float | None = None
         self._last_pv_save: datetime | None = None
 
+        # clé de l'entité -> entity_id (pour la stratégie de tableau de bord)
+        self.entity_ids: dict[str, str] = {}
+
         self._futures: dict[str, asyncio.Future] = {}
         self._send_lock = asyncio.Lock()
         self._unsubs: list[CALLBACK_TYPE] = []

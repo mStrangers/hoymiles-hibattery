@@ -19,6 +19,7 @@ class HiBatteryEntity(Entity):
 
     def __init__(self, hub: HiBatteryHub, key: str, name: str) -> None:
         self.hub = hub
+        self._key = key
         self._attr_name = name
         self._attr_unique_id = f"{hub.device_id}_{key}"
         self._attr_device_info = DeviceInfo(
@@ -30,6 +31,8 @@ class HiBatteryEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
+        # suit aussi les renommages d'entity_id (l'entité est alors ré-ajoutée)
+        self.hub.entity_ids[self._key] = self.entity_id
         self.async_on_remove(
             async_dispatcher_connect(self.hass, self.hub.signal, self._handle_hub_update)
         )

@@ -1,12 +1,17 @@
 /*
- * Hoymiles HiBattery - carte d'édition des plannings TOU
- * Livrée par l'intégration hoymiles_hibattery (chargée automatiquement).
+ * Hoymiles HiBattery - carte d'édition des plannings TOU et tableau de bord
+ * Livrés par l'intégration hoymiles_hibattery (chargés automatiquement).
  *
  *   type: custom:hoymiles-tou-card
  *   entity: sensor.msa_280526231099_planning_tou
+ *
+ * Tableau de bord (Paramètres > Tableaux de bord > Ajouter > « Batterie Hoymiles ») :
+ *   strategy:
+ *     type: custom:hoymiles-hibattery
+ *     grid_power: sensor.xxx   # optionnel : puissance réseau (+ achat), sinon celle du compteur de la batterie
  */
 const DOMAIN = "hoymiles_hibattery";
-const CARD_VERSION = "1.0.2";
+const CARD_VERSION = "1.0.3";
 
 const MODES = {
   1: { name: "Charge forcée", short: "Charge forcée", color: "#ff9800", icon: "mdi:battery-charging-high" },
@@ -452,8 +457,168 @@ const STYLE = `
   .icon:hover:not(:disabled) { background: rgba(127,127,127,.15); }
 `;
 
-if (!customElements.get("hoymiles-tou-card")) {
+// ------------------------------------------------------------ tableau de bord
+// Construit à partir des cartes examples/carte_style_smiles.yaml et carte_reglages.yaml.
+// Les entity_id viennent de l'attribut « entites » du capteur Planning TOU (clé -> entity_id).
+class HoymilesDashboardStrategy extends HTMLElement {
+  static async generate(config, hass) {
+    const planning =
+      (config.entity && hass.states[config.entity]) ||
+      Object.values(hass.states).find(
+        (st) => st.entity_id.startsWith("sensor.") && st.attributes.entites && st.attributes.entry_id
+      );
+    if (!planning) {
+      return {
+        views: [{ title: "Batterie", cards: [{ type: "markdown",
+          content: "Aucune batterie **Hoymiles HiBattery** trouvée : ajoutez l'intégration puis rechargez la page." }] }],
+      };
+    }
+    const ids = planning.attributes.entites || {};
+    const e = (key) => (ids[key] && hass.states[ids[key]] ? ids[key] : undefined);
+    const grid = config.grid_power || e("sys_grid_p");
+    // retire les éléments vides et ceux dont l'entité n'existe pas
+    const only = (list) => list.filter((x) => x && !(typeof x === "object" && "entity" in x && !x.entity));
+    const tile = (entity, name, extra = {}) => entity && { type: "tile", entity, name, ...extra };
+    const badge = (entity) => entity && { type: "entity", entity, show_state: true, show_icon: true };
+    const ifMode = (state, card) => ({
+      type: "conditional",
+      conditions: [{ condition: "state", entity: e("mode"), state }],
+      card,
+    });
+    const glance = (title, columns, entities) => {
+      const list = only(entities);
+      return list.length ? { type: "glance", title, columns, entities: list } : undefined;
+    };
+    const history = (title, hours) => ({
+      type: "history-graph", title, hours_to_show: hours,
+      entities: only([
+        { entity: e("pv_total_p"), name: "PV totale" },
+        { entity: e("bat_p"), name: "Batterie" },
+        { entity: grid, name: "Réseau" },
+      ]),
+    });
+    const modeTile = (name) => tile(e("mode"), name, { features_position: "bottom", features: [{ type: "select-options" }] });
+
+    // flux d'énergie : power-flow-card-plus si installée (HACS), sinon des tuiles
+    const flow = (await HoymilesDashboardStrategy._hasCard(hass, "power-flow-card-plus"))
+      ? {
+          type: "custom:power-flow-card-plus",
+          w_decimals: 0, kw_decimals: 2, watt_threshold: 1000, clickable_entities: true,
+          entities: {
+            solar: { entity: e("pv_total_p"), name: "Solaire", icon: "mdi:solar-power-variant", color_icon: true,
+              ...(e("pv_today") && { secondary_info: { entity: e("pv_today"), unit_of_measurement: "kWh" } }) },
+            battery: { entity: e("bat_p"), state_of_charge: e("soc"), name: "Batterie",
+              color_icon: true, color_state_of_charge_value: true },
+            ...(grid && { grid: { entity: grid, name: "Réseau", color_icon: true,
+              ...(e("grid_import_today") && { secondary_info: { entity: e("grid_import_today"), unit_of_measurement: "kWh" } }) } }),
+            home: { name: "Maison", color_icon: "solar",
+              ...(e("home_today") && { secondary_info: { entity: e("home_today"), unit_of_measurement: "kWh" } }) },
+          },
+        }
+      : {
+          type: "grid", columns: 2, square: false,
+          cards: only([
+            tile(e("pv_total_p"), "Solaire", { color: "amber" }),
+            tile(e("bat_p"), "Batterie"),
+            tile(grid, "Réseau", { color: "blue", icon: "mdi:transmission-tower" }),
+            tile(e("sys_load_p"), "Maison", { icon: "mdi:home-lightning-bolt" }),
+          ]),
+        };
+
+    const vueBatterie = {
+      title: "Batterie", path: "batterie", icon: "mdi:home-battery",
+      cards: only([{
+        type: "vertical-stack",
+        cards: only([
+          { type: "heading", heading: hass.states[ids.soc]?.attributes.friendly_name?.replace(/ SOC$/, "") || "HiBattery",
+            heading_style: "title", icon: "mdi:home-battery", badges: only([badge(e("bat_sts")), badge(e("ems_mode"))]) },
+          flow,
+          { type: "grid", columns: 2, square: false, cards: only([
+            e("soc") && { type: "gauge", entity: e("soc"), name: "Charge batterie", min: 0, max: 100,
+              severity: { red: 0, yellow: 15, green: 40 } },
+            { type: "vertical-stack", cards: only([
+              tile(e("bat_temp"), "Température", { color: "orange" }),
+              tile(e("energy_available"), "Énergie disponible", { color: "green" }),
+              tile(e("rssi"), "Wi-Fi"),
+            ]) },
+          ]) },
+          glance("Aujourd'hui - batterie", 4, [
+            { entity: e("pv_today"), name: "Production PV" },
+            { entity: e("charge_today"), name: "Chargé" },
+            { entity: e("discharge_today"), name: "Déchargé" },
+            { entity: e("out_today"), name: "Fourni maison" },
+          ]),
+          glance("Aujourd'hui - maison et réseau", 3, [
+            { entity: e("home_today"), name: "Consommation" },
+            { entity: e("grid_import_today"), name: "Achat réseau" },
+            { entity: e("grid_export_today"), name: "Injection" },
+          ]),
+          modeTile("Mode de fonctionnement"),
+          history("Aujourd'hui", 24),
+        ]),
+      }]),
+    };
+
+    const vueReglages = {
+      title: "Réglages", path: "reglages", icon: "mdi:tune",
+      cards: [{
+        type: "vertical-stack",
+        cards: only([
+          { type: "heading", heading: "Batterie HiBattery", icon: "mdi:home-battery",
+            badges: only([badge(e("ems_mode")), badge(e("heat"))]) },
+          modeTile("Mode de pilotage"),
+          { type: "grid", columns: 2, square: false, cards: only([
+            tile(e("soc"), "SOC", { color: "green" }),
+            tile(e("bat_sts"), "Statut"),
+            tile(grid, "Réseau", { icon: "mdi:transmission-tower", color: "blue" }),
+            tile(e("bat_p"), "Puissance batterie"),
+            tile(e("pv_total_p"), "Puissance PV totale", { color: "amber" }),
+            tile(e("energy_available"), "Énergie disponible", { color: "green" }),
+          ]) },
+          e("mode") && ifMode("Manuel", { type: "vertical-stack", cards: only([
+            tile(e("manual_setpoint"), "Consigne de décharge",
+              { features_position: "bottom", features: [{ type: "numeric-input", style: "slider" }] }),
+            { type: "entities", title: "Limites", entities: only([
+              { entity: e("soc_min"), name: "SOC mini (décharge)" },
+              { entity: e("discharge_max"), name: "Décharge max" },
+              { entity: e("setpoint"), name: "Consigne envoyée" },
+            ]) },
+          ]) }),
+          e("mode") && ifMode("Planning",
+            { type: "custom:hoymiles-tou-card", entity: planning.entity_id, title: "Plannings batterie" }),
+          history("Batterie (2 h)", 2),
+        ]),
+      }],
+    };
+    return { views: [vueBatterie, vueReglages] };
+  }
+
+  // Les ressources Lovelace (cartes HACS) peuvent finir de se charger après l'appel de la stratégie :
+  // si la carte est déclarée comme ressource, on attend sa définition (5 s max).
+  static async _hasCard(hass, tag) {
+    if (customElements.get(tag)) return true;
+    let resources = [];
+    try {
+      resources = await hass.callWS({ type: "lovelace/resources" });
+    } catch (err) {
+      return false;
+    }
+    if (!resources.some((r) => String(r.url).includes(tag))) return false;
+    return Promise.race([
+      customElements.whenDefined(tag).then(() => true),
+      new Promise((resolve) => setTimeout(() => resolve(false), 5000)),
+    ]);
+  }
+}
+
+// Home Assistant remplace window.customElements au démarrage de son interface (polyfill
+// « scoped custom element registry »). Ce fichier est chargé en même temps que l'interface :
+// défini trop tôt, un élément reste invisible pour Lovelace (« Custom element doesn't exist »).
+// On attend donc que l'interface soit prête avant de définir les éléments.
+const registerElements = () => {
+  if (customElements.get("hoymiles-tou-card")) return;
   customElements.define("hoymiles-tou-card", HoymilesTouCard);
+  customElements.define("ll-strategy-dashboard-hoymiles-hibattery", HoymilesDashboardStrategy);
   window.customCards = window.customCards || [];
   window.customCards.push({
     type: "hoymiles-tou-card",
@@ -461,5 +626,13 @@ if (!customElements.get("hoymiles-tou-card")) {
     description: "Édition des plannings horaires de la batterie HiBattery",
     preview: false,
   });
+  window.customStrategies = window.customStrategies || [];
+  window.customStrategies.push({
+    type: "hoymiles-hibattery",
+    strategyType: "dashboard",
+    name: "Batterie Hoymiles",
+    description: "Flux d'énergie, compteurs du jour, mode de pilotage et plannings de la batterie HiBattery",
+  });
   console.info(`%c HOYMILES-TOU-CARD %c ${CARD_VERSION} `, "background:#1e88e5;color:#fff", "");
-}
+};
+customElements.whenDefined("home-assistant").then(registerElements);

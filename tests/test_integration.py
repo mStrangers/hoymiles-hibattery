@@ -426,3 +426,12 @@ async def test_firmware_133_fields(hass: HomeAssistant, setup):
     }
     for key, value in expected.items():
         assert hass.states.get(f"sensor.msa_280526231099_{key}").state == value, key
+
+
+async def test_entity_map_for_dashboard(hass: HomeAssistant, setup):
+    """Le capteur Planning TOU expose clé -> entity_id (utilisé par la stratégie de tableau de bord)."""
+    entites = hass.states.get("sensor.msa_280526231099_planning_tou").attributes["entites"]
+    assert entites["soc"] == "sensor.msa_280526231099_soc"
+    assert entites["mode"] == "select.msa_280526231099_mode_batterie"
+    assert entites["sys_grid_p"] == "sensor.msa_280526231099_puissance_reseau_compteur"
+    assert all(hass.states.get(entity_id) for entity_id in entites.values())

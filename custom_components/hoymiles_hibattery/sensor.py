@@ -205,7 +205,7 @@ class PlanningSensor(HiBatteryEntity, SensorEntity):
 
     _attr_icon = "mdi:calendar-clock"
     # attributs volumineux (> 16 Ko possible) : inutiles dans l'historique
-    _unrecorded_attributes = frozenset({"plans", "creneaux"})
+    _unrecorded_attributes = frozenset({"plans", "creneaux", "entites"})
 
     def __init__(self, hub: HiBatteryHub) -> None:
         super().__init__(hub, "planning_tou", "Planning TOU")
@@ -241,6 +241,7 @@ class PlanningSensor(HiBatteryEntity, SensorEntity):
             "planning_non_respecte": hub.plan_issue,
             "dernier_envoi": hub.last_plan_sent.isoformat() if hub.last_plan_sent else None,
             "dernier_resultat": hub.last_plan_result,
+            "entites": hub.entity_ids,
         }
 
 
